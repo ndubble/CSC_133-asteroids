@@ -10,5 +10,5 @@ package com.mycompany.a3;
  */
 public interface IMoveable 
 {
-	public void move();
+	public void move(int time, GameWorld gw);
 }

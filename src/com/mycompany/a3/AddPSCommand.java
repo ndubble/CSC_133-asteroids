@@ -23,8 +23,10 @@ public class AddPSCommand extends Command
 	
 	public void actionPerformed(ActionEvent e)
 	{
-		 if (e.getKeyEvent() != -1) {
-			 gw.addPS();
+		 if (e.getKeyEvent() != -1) 
+		 {
+			 if (gw.getGamePlayModeStatus() == true) // if game is currently running
+				 gw.addPS();
 		 }
 	}
 }

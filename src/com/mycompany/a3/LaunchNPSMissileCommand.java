@@ -24,7 +24,7 @@ public class LaunchNPSMissileCommand extends Command
 	public void actionPerformed(ActionEvent e)
 	{
 		 if (e.getKeyEvent() != -1) {
-			 gw.launchNPSMissile();
+			 //gw.launchNPSMissile();
 		 }
 	}
 }

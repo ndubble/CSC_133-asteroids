@@ -10,5 +10,6 @@ package com.mycompany.a3;
  */
 public interface ISteerable 
 {
-	public void turn();
+	public void turnLeft();
+	public void turnRight();
 }

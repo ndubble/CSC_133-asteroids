@@ -1,8 +1,10 @@
 package com.mycompany.a3;
 
 import com.codename1.ui.geom.Point2D;
+
+import java.util.Vector;
+
 import com.codename1.charts.util.ColorUtil;
-import java.util.Random;
 
 /**
  * Author: Nicholas Dubble
@@ -12,17 +14,48 @@ import java.util.Random;
  * Doan Nguyen
  * Fall 2018
  */
-public abstract class GameObject 
+public abstract class GameObject implements IDrawable,ICollider
 {
+	private Vector<GameObject> collideWithList;
 	private Point2D location;
 	protected static final java.util.Random R = new java.util.Random(); // Random class methods used by child classes
 	private int color;
+	private int worldHeight;
+	private int worldWidth;
+	private int size;
 	
-	public GameObject(int gameWorldHeight, int gameWorldWidthwidth)
+	public GameObject(int gameWorldHeight, int gameWorldWidth)
 	{
-		
-		location = new Point2D( R.nextInt((int)gameWorldHeight+1),R.nextInt((int)gameWorldWidthwidth)+1); // default value
+		worldHeight = gameWorldHeight;
+		worldWidth = gameWorldWidth;
+		location = new Point2D( R.nextInt((int)gameWorldWidth),R.nextInt((int)gameWorldHeight)); // default value
 		color = ColorUtil.rgb(0,0,0);	// default value
+		size = 0;
+		collideWithList = new Vector<GameObject>();
+	}
+	
+	public Vector<GameObject> getCollideWithList()
+	{
+		return collideWithList;
+	}
+	public int getSize()
+	{
+		return size;
+	}
+	
+	public void setSize(int s)
+	{
+		size = s;
+	}
+	
+	public int getWorldHeight()
+	{
+		return worldHeight;
+	}
+	
+	public int getWorldWidth()
+	{
+		return worldWidth;
 	}
 	
 	public double getX()

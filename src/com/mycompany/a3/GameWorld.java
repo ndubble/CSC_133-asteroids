@@ -2,6 +2,14 @@ package com.mycompany.a3;
 
 import java.util.Observable;
 
+import com.codename1.charts.util.ColorUtil;
+import com.codename1.ui.Command;
+import com.codename1.ui.Dialog;
+import com.codename1.ui.Form;
+import com.codename1.ui.events.ActionEvent;
+import com.codename1.ui.util.UITimer;
+import com.mycompany.a3.*;
+
 /**
  * Author: Nicholas Dubble
  * File: GameWorld.java
@@ -14,23 +22,42 @@ public class GameWorld extends Observable implements IGameWorld
 {
 	//private java.util.Vector<GameObject> gameObjects = new java.util.Vector<GameObject>();
 	private GameObjectCollection gameObjects;
+	private final int NPSDESTROYEDPOINTS = 10;
+	private final int ASTEROIDDESTROYEDPOINTS = 5;
 	private int playerLives;
-	private final int TURNAMOUNT = 5;							// a constant used to determine how much a playership can turn (keep it a multiple of 360)
-	private int playerScore;
-	private int gameTime;										// elapsed game time								// used to confirm whether or not a user wants to quit
-	private final int SPEEDINCREMENT = 1;						// constant used for increasing/decreasing player ship speed
+	private int playerScore;										// elapsed game time								// used to confirm whether or not a user wants to quit
+	private final int SPEEDINCREMENT = 2;						// constant used for increasing/decreasing player ship speed
 	protected int gameWorldHeight;
 	protected int gameWorldWidth;
-	private boolean sound;
+	private boolean sound = true;
+	private int timerRateMillisecs;
+	private long start;
+	private Sound fireMissileSound = new Sound("firemissile.wav");
+	private Sound missileAsteroidCollisionSound = new Sound("missileasteroidcollision.wav");
+	private Sound jumpHyperspaceSound = new Sound("dbz-teleport.mp3");
+	private Sound gameOverSound = new Sound("gameover.wav");
+	private Sound shipExplosionSound = new Sound("shipexplosion.mp3");
+	private boolean gamePlayMode;
+	private BGSound backgroundSound = new BGSound("backgroundmusic.mp3");
+	private boolean gameOver;
+	//private final static Sound fireMissileSound = new Sound("firemissile.wav");
 	
-	public void init(int h, int w)
+	public void init(int h, int w, int tRate)
 	{
+		timerRateMillisecs = tRate;
 		playerLives = 3;
 		playerScore = 0;
-		gameTime = 0;  
-		sound = true;
 		gameWorldHeight = h;
 		gameWorldWidth = w;
+		start = System.currentTimeMillis();
+		gamePlayMode = true; // true = "play" , false = "pause"
+		if (getSound() == true)
+			backgroundSound.play();
+		gameOver = false;
+		for (int i = 0; i < 10; i++) // populate game world with asteroids
+			this.addAsteroid();
+		this.addStation();
+		this.addPS();
 		this.setChanged();
 		this.notifyObservers(new GameWorldProxy(this)); //notify observers with initial GameWorld values
 	}
@@ -38,7 +65,26 @@ public class GameWorld extends Observable implements IGameWorld
 	public GameWorld()
 	{
 		gameObjects = new GameObjectCollection();
-
+	}
+	
+	public void resetWorld()
+	{
+		IIterator iterator = this.getIterator();
+		while(iterator.size() != 0)
+		{
+			gameObjects.remove(0); // remove all game objects
+		}
+		this.init(gameWorldHeight, gameWorldWidth, timerRateMillisecs);
+	}
+	
+	public boolean getGameOverStatus()
+	{
+		return gameOver;
+	}
+	
+	public void setGameOverStatus()
+	{
+		gameOver = true;
 	}
 	
 	public IIterator getIterator()
@@ -46,9 +92,22 @@ public class GameWorld extends Observable implements IGameWorld
 		return gameObjects.getIterator();
 	}
 	
+	public boolean getGamePlayModeStatus()
+	{
+		return gamePlayMode;
+	}
+	
+	public void toggleGamePlayMode()
+	{
+		if (gamePlayMode == true)
+			gamePlayMode = false;
+		else
+			gamePlayMode = true;
+	}
+	
 	public int getElapsedTime()
 	{
-		return gameTime;
+		return ((int)System.currentTimeMillis()/1000 - (int)start/1000);
 	}
 	
 	public boolean getSound()
@@ -56,21 +115,39 @@ public class GameWorld extends Observable implements IGameWorld
 		return sound;
 	}
 	
+	public int getTimerRate()
+	{
+		return timerRateMillisecs;
+	}
+	
+	public void toggleBackgroundSound()
+	{
+		if (this.getGamePlayModeStatus() == false)
+		{
+			backgroundSound.pause();
+		}
+		else
+		{
+			backgroundSound.play();
+		}
+	}
+	
 	public boolean setSound()
 	{
 		if (sound == true)
+		{
 			sound = false;
+			backgroundSound.pause();
+		}
 		else
+		{
 			sound = true;
+			if (this.getGamePlayModeStatus() == true)
+				backgroundSound.play();
+		}
 		
 		this.setChanged();
 		this.notifyObservers(new GameWorldProxy(this));
-		return true;
-	}
-	
-	public boolean incrementGameTime()
-	{
-		gameTime++;
 		return true;
 	}
 	
@@ -116,11 +193,6 @@ public class GameWorld extends Observable implements IGameWorld
 		return playerScore;
 	}
 	
-	public int getElapsedTme()
-	{
-		return gameTime;
-	}
-	
 	public boolean setPlayerScore(int x)
 	{
 		playerScore = x;
@@ -163,8 +235,7 @@ public class GameWorld extends Observable implements IGameWorld
 	
 	public boolean addNPS() // 'y' - add a NPS to the world
 	{
-		
-		NonPlayerShip nps = new NonPlayerShip(gameWorldHeight, gameWorldWidth);
+		NonPlayerShip nps = new NonPlayerShip(gameWorldHeight, gameWorldWidth, timerRateMillisecs);
 		gameObjects.add(nps);
 		System.out.println("A new NONPLAYERSHIP has been created.");
 		this.setChanged();
@@ -227,7 +298,7 @@ public class GameWorld extends Observable implements IGameWorld
 				{
 					ps.setSpeed(ps.getSpeed()+SPEEDINCREMENT);  // update playership speed
 					ps.getMissileLauncher().setSpeed(ps.getSpeed()); // update missile launcher speed to match ship speed
-					System.out.println("PLAYERSHIP speed increased by 1");
+					System.out.println("PLAYERSHIP speed increased by " + SPEEDINCREMENT);
 					this.setChanged();
 					this.notifyObservers(new GameWorldProxy(this));
 				}
@@ -258,7 +329,7 @@ public class GameWorld extends Observable implements IGameWorld
 				{
 					ps.setSpeed(ps.getSpeed()-SPEEDINCREMENT);	// set playership speed
 					ps.getMissileLauncher().setSpeed(ps.getSpeed()); // update missile launcher speed to match ship speed
-					System.out.println("PLAYERSHIP speed decreased by 1");
+					System.out.println("PLAYERSHIP speed decreased by " + SPEEDINCREMENT);
 					this.setChanged();
 					this.notifyObservers(new GameWorldProxy(this));
 				}
@@ -278,58 +349,35 @@ public class GameWorld extends Observable implements IGameWorld
 	public boolean turnLeft()  // 'l'
 	{
 		
-		Boolean playerShip = false; // used for every iteration
 		IIterator iterator = getIterator();
 		
-		for(int i = 0; i <iterator.size() && !playerShip;i++) // keep looking until playership has been found
+		for(int i = 0; i <iterator.size();i++) // keep looking until playership has been found
 		{
 			if (iterator.elementAt(i) instanceof ISteerable)
 			{
-				playerShip = isPlayerShip(i);
-				if(playerShip)
-				{
-					PlayerShip ps = (PlayerShip) iterator.elementAt(i);
-					if (ps.getDirection() == 0) // if playership direction is currently at 0
-						ps.setDirection(360 - TURNAMOUNT);
-					else
-						ps.setDirection(ps.getDirection() - TURNAMOUNT);
-					System.out.println("PLAYERSHIP turned " + TURNAMOUNT + " degrees counter-clockwise. dir = " + ps.getDirection() + ".");
-					this.setChanged();
-					this.notifyObservers(new GameWorldProxy(this));
-				}
+				ISteerable obj = (ISteerable) iterator.elementAt(i);
+				obj.turnLeft();
+				this.setChanged();
+				this.notifyObservers(new GameWorldProxy(this));
 			}
 		}
-		if(!playerShip)
-			printNoPlayerShip();
 		return true;
 	}
 	/* turn PS right (change the ship heading by a small amount in the clockwise direction).*/
 	public boolean turnRight() // - 'r'
 	{
-		
-		Boolean playerShip = false;
 		IIterator iterator = getIterator();
 		
-		for(int i = 0; i <iterator.size() && !playerShip;i++) // keep looking until playership has been found
+		for(int i = 0; i <iterator.size();i++) // keep looking until playership has been found
 		{
 			if(iterator.elementAt(i) instanceof ISteerable)
 			{
-				playerShip = isPlayerShip(i);
-				if(playerShip)
-				{
-					PlayerShip ps = (PlayerShip) iterator.elementAt(i);
-					if ((ps.getDirection() + TURNAMOUNT) == 360)
-						ps.setDirection(0);
-					else
-						ps.setDirection(ps.getDirection() + TURNAMOUNT);
-					System.out.println("PLAYERSHIP turned " + TURNAMOUNT + " degrees clockwise. dir = " + ps.getDirection() + ".");
-					this.setChanged();
-					this.notifyObservers(new GameWorldProxy(this));
-				}
+				ISteerable obj = (ISteerable) iterator.elementAt(i);
+				obj.turnRight();
+				this.setChanged();
+				this.notifyObservers(new GameWorldProxy(this));
 			}
 		}
-		if(!playerShip)
-			printNoPlayerShip();
 		return true;
 	}
 	
@@ -347,11 +395,7 @@ public class GameWorld extends Observable implements IGameWorld
 				if(playerShip)
 				{
 					PlayerShip ps = (PlayerShip) iterator.elementAt(i);
-					if (ps.getMissileLauncher().getDirection() == 0)
-						ps.getMissileLauncher().setDirection(360 - TURNAMOUNT);
-					else
-						ps.getMissileLauncher().setDirection(ps.getMissileLauncher().getDirection() - TURNAMOUNT);
-					System.out.println("MISSILELAUNCHER turned " + TURNAMOUNT + " degrees counter-clockwise. dir = " + ps.getMissileLauncher().getDirection() + ".");
+					ps.getMissileLauncher().turnLeft();
 					this.setChanged();
 					this.notifyObservers(new GameWorldProxy(this));
 				}
@@ -376,11 +420,7 @@ public class GameWorld extends Observable implements IGameWorld
 				if(playerShip)
 				{
 					PlayerShip ps = (PlayerShip) iterator.elementAt(i);
-					if ((ps.getMissileLauncher().getDirection() + TURNAMOUNT) == 360)
-						ps.getMissileLauncher().setDirection(0);
-					else
-						ps.getMissileLauncher().setDirection(ps.getMissileLauncher().getDirection() + TURNAMOUNT);
-					System.out.println("MISSILELAUNCHER turned " + TURNAMOUNT + " degrees clockwise. dir = " + ps.getMissileLauncher().getDirection() + ".");
+					ps.getMissileLauncher().turnRight();
 					this.setChanged();
 					this.notifyObservers(new GameWorldProxy(this));
 				}
@@ -409,7 +449,9 @@ public class GameWorld extends Observable implements IGameWorld
 				if (ps.getMissicleCount() > 0)
 				{
 					ps.setMissileCount(ps.getMissicleCount() - 1);
-					Missile msl = new Missile(ps.getLocation(),ps.getMissileLauncher().getDirection(), ps.getSpeed(), true, gameWorldHeight, gameWorldWidth);
+					Missile msl = new Missile(ps.getMissileLauncher().getMissleSpawnLocation(),ps.getMissileLauncher().getDirection(), ps.getSpeed(), true, gameWorldHeight, gameWorldWidth, ColorUtil.BLUE);
+					if (getSound() && this.getGamePlayModeStatus() == true) // if sound is toggled on and not paused
+						fireMissileSound.play();
 					gameObjects.add(msl);
 					System.out.println("PLAYERSHIP has fired a missile!");
 					this.setChanged();
@@ -428,35 +470,23 @@ public class GameWorld extends Observable implements IGameWorld
 	 * otherwise, add to the world a new missile with a location, speed, and launchers heading determined by the ship.
 	 */
 	
-	public boolean launchNPSMissile() // - 'L'
+	public boolean launchNPSMissile(NonPlayerShip nps) // - 'L'
 	{
-		
-		Boolean nonPlayerShip = false; // used for every iteration
-		Boolean nonPlayerShipDoesExist = false; // stays set to true if atleast 1 nonplayership exists
-		IIterator iterator = getIterator();
-		
-		for(int i = 0; i <iterator.size();i++) // search for all NPSs
+		if(nps.getMissileCount() != 0)
 		{
-			nonPlayerShip = isNonPlayerShip(i);
-			if(nonPlayerShip)
+			if(nps.getTimeElapsedSinceLastShot()%nps.getReloadTimeMillisecs() == 0)
 			{
-				nonPlayerShipDoesExist = true; // atleast 1 NonPlayerShip exists
-				NonPlayerShip nps = (NonPlayerShip) iterator.elementAt(i);
-				if (nps.getMissileCount() > 0)
-				{
-					nps.setMissileCount(nps.getMissileCount() - 1);
-					Missile msl = new Missile(nps.getLocation(),nps.getMissileLauncher().getDirection(), nps.getSpeed(), false, gameWorldHeight, gameWorldWidth);
-					gameObjects.add(msl);
-					System.out.println("NONPLAYERSHIP has fired a missile!");
-					this.setChanged();
-					this.notifyObservers(new GameWorldProxy(this));
-				}
-				else
-					System.out.println("NONPLAYERSHIP has no more missiles!");
+				nps.setMissileCount(nps.getMissileCount() - 1);
+				Missile msl = new Missile(nps.getLocation(),nps.getMissileLauncher().getDirection(), nps.getSpeed(), false, gameWorldHeight, gameWorldWidth,ColorUtil.GREEN);
+				if (getSound() && this.getGamePlayModeStatus() == true)
+					fireMissileSound.play();
+				gameObjects.add(msl);
+				System.out.println("NONPLAYERSHIP has fired a missile!");
+				this.setChanged();
+				this.notifyObservers(new GameWorldProxy(this));
 			}
+			nps.addRateToTimeElapsedSinceLastShot();
 		}
-		if (!nonPlayerShipDoesExist) // if NonPlayerShip doesn't exist
-			printNoNonPlayerShip();
 		return true;
 	}
 	
@@ -478,6 +508,8 @@ public class GameWorld extends Observable implements IGameWorld
 			{
 				playerShipDoesExist = true;
 				PlayerShip ps = (PlayerShip) iterator.elementAt(i);
+				if (this.getSound() == true)
+					jumpHyperspaceSound.play();
 				ps.setLocation(ps.getINITIALSPAWN());	// reset playership to initial spawn location
 				System.out.println("PLAYERSHIP jumped through hyperspace!");
 				this.setChanged();
@@ -856,8 +888,7 @@ public class GameWorld extends Observable implements IGameWorld
 	public boolean tick() // - 't'
 	{
 		
-		incrementGameTime(); // (4)
-		System.out.println("Game time has incremented by one. Time is currently: " + gameTime);
+		//System.out.println("Game time has incremented by one. Time is currently: " + gameTime);
 		IIterator iterator = getIterator();
 		
 		for(int i =0; i < iterator.size(); i++) // check all game objects
@@ -865,31 +896,7 @@ public class GameWorld extends Observable implements IGameWorld
 			if ((iterator.elementAt(i) instanceof IMoveable)) // (1)
 			{
 				IMoveable mObj = (IMoveable) iterator.elementAt(i);
-				mObj.move();
-				
-				double shift;
-				MoveableObject mv = (MoveableObject) mObj;
-				/* the following if/else statements are used to check whether or not current the moveableobject has went out of bounds went it moved*/
-				if (mv.getX() > gameWorldWidth) // if moveableobject moved too far east (out of bounds)
-				{
-					shift =  mv.getX() - gameWorldWidth;
-					mv.setX(shift); // wraps around to the left side of screen
-				}
-				else if (mv.getX() < 0) // if moveableobject moved too far west (out of bounds)
-				{
-					shift = gameWorldWidth - Math.abs(mv.getX()); // wraps around to right side of screen
-					mv.setX(shift);
-				}
-				if (mv.getY() > gameWorldHeight) // if moveableobject moved too far north (out of bounds)
-				{
-					shift = mv.getY() - gameWorldHeight;
-					mv.setY(shift); // wraps around to the bottom of the screen
-				}
-				else if (mv.getY() < 0) // if moveableobject moved too far south (out of bounds)
-				{
-					shift = gameWorldHeight - Math.abs(mv.getY());
-					mv.setY(shift);
-				}
+				mObj.move(timerRateMillisecs, this);
 				
 				if (iterator.elementAt(i) instanceof PlayerShip) // need to update missile launcher speed/location for a playership
 				{
@@ -932,11 +939,114 @@ public class GameWorld extends Observable implements IGameWorld
 			}
 		}
 		
+		iterator = getIterator();
+		for (int i = 0; i < iterator.size(); i++)
+		{
+			if (iterator.elementAt(i) instanceof ICollider)
+			{
+				ICollider curObj = (ICollider) iterator.elementAt(i); // get a collidable object
+				// check if this object collides with any other object
+				IIterator iterator2 = getIterator();
+				for(int j = 0; j < iterator2.size(); j++)
+				{
+					if (iterator2.elementAt(j) instanceof ICollider)
+					{
+						ICollider otherObj = (ICollider) iterator2.elementAt(j); // get a collidable object
+						otherObj.collidesWithWall();
+						// check for collision
+						if (otherObj!=curObj) // make sure it's not the SAME object
+						{
+							boolean alreadyHandlingCollision = false;
+							GameObject curGameObj = (GameObject) curObj;
+							GameObject otherGameObj = (GameObject) otherObj;
+							if (curGameObj.getCollideWithList().contains(otherGameObj) ||
+								otherGameObj.getCollideWithList().contains(curGameObj))
+								alreadyHandlingCollision = true;
+							if(curObj.collidesWith(otherObj) && !alreadyHandlingCollision)
+								curObj.handleCollision(otherObj);
+						}
+					}
+				}
+			}
+		}
+		
+		iterator = getIterator();
+		for (int i = 0; i < iterator.size(); i++) // remove game objects that are supposed to be removed when collision occurs
+		{
+			if (iterator.elementAt(i) instanceof MoveableObject)
+			{
+				MoveableObject curObj = (MoveableObject) iterator.elementAt(i);
+				if (curObj.getKillStatus() == true)
+				{
+					if (curObj instanceof PlayerShip)
+					{
+						if (getSound() == true)
+							shipExplosionSound.play();
+						gameObjects.remove(i);
+						this.setPlayerLives(this.getPlayerLives()-1);
+						if(this.getPlayerLives() == 0)
+						{
+							this.setGameOverStatus();
+							if (getSound() == true)
+								gameOverSound.play();
+						}
+						else
+							this.addPS();
+					}
+					else if (curObj instanceof NonPlayerShip)
+					{
+						NonPlayerShip nps = (NonPlayerShip) curObj;
+						if (nps.getDestroyedByPS() == true)
+							this.setPlayerScore(this.getPlayerScore() + NPSDESTROYEDPOINTS);
+						if (getSound() == true)
+							shipExplosionSound.play();
+						gameObjects.remove(i);
+					}
+					else if (curObj instanceof Asteroid)
+					{
+						Asteroid ast = (Asteroid) curObj;
+						if (ast.getDestroyedByPS() == true)
+						{
+							this.setPlayerScore(this.getPlayerScore() + ASTEROIDDESTROYEDPOINTS);
+							if (getSound())
+								missileAsteroidCollisionSound.play();
+						}
+						else if (ast.getDestroyedByNPS() == true)
+						{
+							if (getSound())
+								missileAsteroidCollisionSound.play();
+						}
+						gameObjects.remove(i);
+					}
+					else
+						gameObjects.remove(i);
+				}
+			}
+		}
+			
 		this.setChanged();
 		this.notifyObservers(new GameWorldProxy(this));
 		return true;
 	}
 
+	public void refuel()
+	{
+		IIterator iterator = getIterator();
+		while(iterator.hasNext())
+		{
+			Object obj = iterator.getNext();
+			if (obj instanceof ISelectable)
+			{
+				ISelectable selectableObj = (ISelectable) obj;
+				if(selectableObj instanceof Missile && selectableObj.isSelected() == true)
+				{
+					Missile missileObj = (Missile) selectableObj;
+					missileObj.setFuelLevel(missileObj.getInitialFuel());
+				}
+			}
+		}
+	}
+	
 	public void printMap() // 'm' - print a "map" showing the current world state
 	{
 		

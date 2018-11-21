@@ -23,5 +23,14 @@ public class ControlPanelButton extends Button
 		
 		super.getAllStyles().setPadding(TOP, 5);
 		super.getAllStyles().setPadding(BOTTOM, 5);
+		
+		super.getDisabledStyle().setBgTransparency(255);
+		super.getDisabledStyle().setBgColor(ColorUtil.GRAY);
+		super.getDisabledStyle().setFgColor(ColorUtil.rgb(255,255,255));
+		
+		super.getSelectedStyle().setBgTransparency(255);
+		super.getSelectedStyle().setBgColor(ColorUtil.rgb(200, 0, 200));
+		super.getSelectedStyle().setFgColor(ColorUtil.rgb(255, 255, 255));
+		
 	}
 }

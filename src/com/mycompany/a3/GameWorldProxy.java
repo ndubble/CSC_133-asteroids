@@ -46,7 +46,7 @@ public class GameWorldProxy extends Observable implements IGameWorld
 
 	public int getElapsedTime()
 	{
-		return realGameWorld.getElapsedTme();
+		return realGameWorld.getElapsedTime();
 	}
 	
 	public boolean getSound()
@@ -57,6 +57,11 @@ public class GameWorldProxy extends Observable implements IGameWorld
 	public void printMap()
 	{
 		realGameWorld.printMap();
+	}
+	
+	public boolean getGamePlayModeStatus() 
+	{
+		return realGameWorld.getGamePlayModeStatus();
 	}
 
 
@@ -149,7 +154,7 @@ public class GameWorldProxy extends Observable implements IGameWorld
 	}
 
 	
-	public boolean launchNPSMissile() {
+	public boolean launchNPSMissile(NonPlayerShip nps) {
 		
 		return false;
 	}

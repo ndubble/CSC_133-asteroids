@@ -6,15 +6,20 @@ import com.codename1.ui.Command;
 import com.codename1.ui.Container;
 import com.codename1.ui.Dialog;
 import com.codename1.ui.Form;
-import com.codename1.ui.events.ActionListener;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
 import com.codename1.ui.plaf.Border;
+import com.codename1.ui.util.UITimer;
 import com.mycompany.a3.views.MapView;
 import com.mycompany.a3.views.PointsView;
 import com.codename1.ui.Label;
 import com.codename1.ui.events.ActionEvent;
+import com.codename1.ui.events.ActionListener;
+
 import java.lang.String;
+import java.util.Random;
+import java.util.Vector;
+
 import com.codename1.ui.Toolbar;
 
 /**
@@ -25,11 +30,15 @@ import com.codename1.ui.Toolbar;
  * Doan Nguyen
  * Fall 2018
  */
-public class Game extends Form 
+public class Game extends Form implements Runnable
 {
 	private GameWorld gw;
 	private MapView mv;
 	private PointsView pv;
+	private int refreshRate = 10;
+	UITimer timer;
+	private Vector<ControlPanelButton> controlPanelButtons;
+	private Vector<Command> commands;
 	
 	public Game()
 	{
@@ -37,10 +46,17 @@ public class Game extends Form
 		mv = new MapView();
 		gw = new GameWorld();
 		pv = new PointsView(gw);
+		
+		controlPanelButtons = new Vector<ControlPanelButton>();
+		commands = new Vector<Command>();
+		
 		//Register observers (MapView and PointsView) with the observable(GameWorld)
 		gw.addObserver(mv);
 		gw.addObserver(pv);
 				
+		timer = new UITimer (this);
+		timer.schedule(refreshRate, true, this);
+		
 		//Use BorderLayout for the Form
 		setLayout(new BorderLayout());
 		//Create toolbar that will have two side menus: Commands and File
@@ -107,7 +123,6 @@ public class Game extends Form
 		ControlPanelButton addAsteroid = new ControlPanelButton ("Add Asteroid");
 		ControlPanelButton addNPS = new ControlPanelButton("Add Non-Player Ship");
 		ControlPanelButton addStation = new ControlPanelButton("Add Station");
-		ControlPanelButton addPS = new ControlPanelButton("Add Player Ship");
 		ControlPanelButton increaseSpeed = new ControlPanelButton("Increase Player Speed");
 		ControlPanelButton decreaseSpeed = new ControlPanelButton("Decrease Player Speed");
 		ControlPanelButton turnLeft = new ControlPanelButton("Turn Player Ship Left");
@@ -115,19 +130,23 @@ public class Game extends Form
 		ControlPanelButton turnPSMLLeft = new ControlPanelButton("Turn Player Ship ML Left");
 		ControlPanelButton turnPSMLRight = new ControlPanelButton("Turn Player Ship ML Right");
 		ControlPanelButton firePSMissile = new ControlPanelButton("Fire Player Ship Missile");
-		ControlPanelButton launchNPSMissile = new ControlPanelButton("Launch Non-Player Ship Missile");
 		ControlPanelButton jump = new ControlPanelButton("Jump Through Hyperspace");
-		ControlPanelButton newSupply = new ControlPanelButton("Load Player Ship with Missile Supply");
-		ControlPanelButton removeMissileAsteroid = new ControlPanelButton("Destroy Player Missile and Asteroid");
-		ControlPanelButton removeMissileNPS = new ControlPanelButton("Destroy Player Missile and Non-Player Ship");
-		ControlPanelButton removeMissilePS = new ControlPanelButton("Destroy Non-Player Ship Missile and Player Ship");
-		ControlPanelButton removePSAsteroid = new ControlPanelButton("Destroy Player Ship and Asteroid");
-		ControlPanelButton removeNPSPS = new ControlPanelButton("Destroy Non-Player Ship and Player Ship");
-		ControlPanelButton removeTwoAsteroids = new ControlPanelButton("Destroy Two Asteroids");
-		ControlPanelButton removeAsteroidNPS = new ControlPanelButton("Destroy Asteroid and Non-Player Ship");
-		ControlPanelButton tick = new ControlPanelButton("Tick (increase game time)");
+		ControlPanelButton refuel = new ControlPanelButton("Refuel");
+		ControlPanelButton gamemodeSelect = new ControlPanelButton("Pause");
 		ControlPanelButton quit = new ControlPanelButton("Quit");
-			
+		
+		controlPanelButtons.add(addAsteroid);
+		controlPanelButtons.add(addNPS);
+		controlPanelButtons.add(addStation);
+		controlPanelButtons.add(increaseSpeed);
+		controlPanelButtons.add(decreaseSpeed);
+		controlPanelButtons.add(turnLeft);
+		controlPanelButtons.add(turnRight);
+		controlPanelButtons.add(turnPSMLLeft);
+		controlPanelButtons.add(turnPSMLRight);
+		controlPanelButtons.add(firePSMissile);
+		controlPanelButtons.add(jump);
+		controlPanelButtons.add(refuel);
 		
 		//Declare all the needed commands for the buttons, keys, and Commands side menu
 		AddAsteroidCommand myAddAsteroid = new AddAsteroidCommand(gw);
@@ -138,9 +157,6 @@ public class Game extends Form
 		
 		AddStationCommand myAddStation = new AddStationCommand(gw);
 		addStation.setCommand(myAddStation);
-		
-		AddPSCommand myAddPS = new AddPSCommand(gw);
-		addPS.setCommand(myAddPS);
 		
 		IncreaseSpeedCommand myIncreaseSpeed = new IncreaseSpeedCommand(gw);
 		increaseSpeed.setCommand(myIncreaseSpeed);
@@ -163,42 +179,30 @@ public class Game extends Form
 		FirePSMissileCommand myFirePSMissile = new FirePSMissileCommand(gw);
 		firePSMissile.setCommand(myFirePSMissile);
 		
-		LaunchNPSMissileCommand myLaunchNPSMissile = new LaunchNPSMissileCommand(gw);
-		launchNPSMissile.setCommand(myLaunchNPSMissile);
-		
 		JumpCommand myJump = new JumpCommand(gw);
 		jump.setCommand(myJump);
 		
-		NewSupplyCommand myNewSupply = new NewSupplyCommand(gw);
-		newSupply.setCommand(myNewSupply);
-		
-		RemoveMissileAsteroidCommand myRemoveMissileAsteroid = new RemoveMissileAsteroidCommand(gw);
-		removeMissileAsteroid.setCommand(myRemoveMissileAsteroid);
-		
-		RemoveMissileNPSCommand myRemoveMissileNPS = new RemoveMissileNPSCommand(gw);
-		removeMissileNPS.setCommand(myRemoveMissileNPS);
-		
-		RemoveMissilePSCommand myRemoveMissilePS = new RemoveMissilePSCommand(gw);
-		removeMissilePS.setCommand(myRemoveMissilePS);
-		
-		RemovePSAsteroidCommand myRemovePSAsteroid = new RemovePSAsteroidCommand(gw);
-		removePSAsteroid.setCommand(myRemovePSAsteroid);
-		
-		RemoveNPSPSCommand myRemoveNPSPS = new RemoveNPSPSCommand(gw);
-		removeNPSPS.setCommand(myRemoveNPSPS);
-		
-		RemoveTwoAsteroidsCommand myRemoveTwoAsteroids = new RemoveTwoAsteroidsCommand(gw);
-		removeTwoAsteroids.setCommand(myRemoveTwoAsteroids);
-		
-		RemoveAsteroidNPSCommand myRemoveAsteroidNPS = new RemoveAsteroidNPSCommand(gw);
-		removeAsteroidNPS.setCommand(myRemoveAsteroidNPS);
-		
-		TickCommand myTick= new TickCommand(gw);
-		tick.setCommand(myTick);
+		RefuelCommand myRefuel = new RefuelCommand(gw);
+		refuel.setCommand(myRefuel);
 		
 		QuitCommand myQuit= new QuitCommand();
 		quit.setCommand(myQuit);
 		
+		commands.add(myAddAsteroid);
+		commands.add(myAddNPS);
+		commands.add(myAddStation);
+		commands.add(myIncreaseSpeed);
+		commands.add(myDecreaseSpeed);
+		commands.add(myTurnLeft);
+		commands.add(myTurnRight);
+		commands.add(myTurnPSMLLeft);
+		commands.add(myTurnPSMLRight);
+		commands.add(myFirePSMissile);
+		commands.add(myJump);
+		commands.add(myRefuel);
+		
+		GamemodeCommand myGamemodeCommand = new GamemodeCommand(gw,timer,this, gamemodeSelect, controlPanelButtons, commands);
+		gamemodeSelect.setCommand(myGamemodeCommand);
 		
 		// Bind the keys to the commands, add the button to the control panel, and add command to side menu if necessary
 		addKeyListener('a',myAddAsteroid);
@@ -211,10 +215,6 @@ public class Game extends Form
 		addKeyListener('b',myAddStation);
 		controlPanel.add(addStation);
 		toolbar.addCommandToLeftSideMenu(myAddStation);
-		
-		addKeyListener('s',myAddPS);
-		controlPanel.add(addPS);
-		toolbar.addCommandToLeftSideMenu(myAddPS);
 		
 		addKeyListener(-91,myIncreaseSpeed);
 		controlPanel.add(increaseSpeed);
@@ -237,49 +237,20 @@ public class Game extends Form
 		addKeyListener(-90,myFirePSMissile);
 		controlPanel.add(firePSMissile);
 		
-		addKeyListener('L',myLaunchNPSMissile);
-		controlPanel.add(launchNPSMissile);
-		
 		addKeyListener('j',myJump);
 		controlPanel.add(jump);
 		
-		addKeyListener('n',myNewSupply);
-		controlPanel.add(newSupply);
-		toolbar.addCommandToLeftSideMenu(myNewSupply);
+		controlPanel.add(refuel);
 		
-		addKeyListener('k',myRemoveMissileAsteroid);
-		controlPanel.add(removeMissileAsteroid);
-		toolbar.addCommandToLeftSideMenu(myRemoveMissileAsteroid);
-		
-		addKeyListener('e',myRemoveMissileNPS);
-		controlPanel.add(removeMissileNPS);
-		
-		addKeyListener('E',myRemoveMissilePS);
-		controlPanel.add(removeMissilePS);
-		
-		addKeyListener('c',myRemovePSAsteroid);
-		controlPanel.add(removePSAsteroid);
-		toolbar.addCommandToLeftSideMenu(myRemovePSAsteroid);
-		
-		addKeyListener('h',myRemoveNPSPS);
-		controlPanel.add(removeNPSPS);
-		
-		addKeyListener('x',myRemoveTwoAsteroids);
-		controlPanel.add(removeTwoAsteroids);
-		toolbar.addCommandToLeftSideMenu(myRemoveTwoAsteroids);
-		
-		addKeyListener('i',myRemoveAsteroidNPS);
-		controlPanel.add(removeAsteroidNPS);
-		
-		addKeyListener('t',myTick);
-		controlPanel.add(tick);
-		toolbar.addCommandToLeftSideMenu(myTick);
+		controlPanel.add(gamemodeSelect);
 		
 		addKeyListener('z',myQuit);
 		controlPanel.add(quit);
 		toolbar.addCommandToLeftSideMenu(myQuit);
 		
-		// Create command called Commandsthat will be used for the title of the Commands side menu and
+		
+		
+		// Create command called Commands that will be used for the title of the Commands side menu and
 		Command commandsTitle = new Command("Commands");
 		toolbar.addCommandToLeftBar(commandsTitle);
 		
@@ -291,6 +262,46 @@ public class Game extends Form
 		this.show();
 		
 		// Update the size of the game world based on the values of MapViews' getHeight() and getWidth() , which will have values by this point
-		gw.init(mv.getHeight(),mv.getWidth());
+		gw.init(mv.getHeight(),mv.getWidth(),refreshRate);
+	}
+
+	public Vector<ControlPanelButton> getControlPanelButtons()
+	{
+		return controlPanelButtons;
+	}
+	
+	public Vector<Command> getCommands()
+	{
+		return commands;
+	}
+	
+	public static int genRandInt(int min, int max)
+	{
+		Random r = new Random();
+		int x = r.nextInt((max-min) + 1) + min;
+		return x;
+	}
+	
+	@Override
+	public void run() 
+	{
+		if (!gw.getGameOverStatus())
+		{
+			int roll = this.genRandInt(1, 900);
+			if (roll>=1 && roll<=3)
+				gw.addNPS();
+			gw.tick();
+		}
+		else
+		{
+			timer.cancel();
+			if (Dialog.show("Game Over!", "Final Score: " + gw.getPlayerScore() + "\nPlay again?", "Quit", "Yes")) 
+				System.exit(0);
+			else
+			{
+				gw.resetWorld();
+				timer.schedule(refreshRate,true,this);
+			}
+		}
 	}
 }

@@ -4,8 +4,6 @@ package com.mycompany.a3;
 import com.codename1.ui.Display;
 import com.codename1.ui.Form;
 import com.codename1.ui.Dialog;
-import userclasses.StateMachine;
-import com.codename1.io.Log;
 import com.codename1.ui.Toolbar;
 
 

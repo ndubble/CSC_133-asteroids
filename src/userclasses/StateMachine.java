@@ -5,8 +5,6 @@
 package userclasses;
 
 import generated.StateMachineBase;
-import com.codename1.ui.*; 
-import com.codename1.ui.events.*;
 import com.codename1.ui.util.Resources;
 
 /**

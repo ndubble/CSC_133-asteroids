@@ -23,8 +23,10 @@ public class AddStationCommand extends Command
 	
 	public void actionPerformed(ActionEvent e)
 	{
-		 if (e.getKeyEvent() != -1) {
-			 gw.addStation();
+		 if (e.getKeyEvent() != -1) 
+		 {
+			 if (gw.getGamePlayModeStatus() == true) // if game is currently running
+				 gw.addStation();
 		 }
 	}
 }

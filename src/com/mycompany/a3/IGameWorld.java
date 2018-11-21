@@ -18,12 +18,12 @@ public interface IGameWorld
 	int getElapsedTime();
 	boolean getSound();
 	void printMap();
+	boolean getGamePlayModeStatus();
 	
 	// Methods that GameWorldProxy cannot utilize
 	boolean setPlayerLives(int x);
 	boolean setPlayerScore(int x);
 	boolean setSound();
-	boolean incrementGameTime();
 	boolean addAsteroid();
 	boolean addNPS();
 	boolean addStation();
@@ -35,7 +35,7 @@ public interface IGameWorld
 	boolean turnPSMLLeft();
 	boolean turnPSMLRight();
 	boolean firePSMissile();
-	boolean launchNPSMissile();
+	boolean launchNPSMissile(NonPlayerShip nps);
 	boolean jump();
 	boolean newSupply();
 	boolean removeMissileAsteroid();
