@@ -25,8 +25,7 @@ public class AddAsteroidCommand extends Command
 	{
 		 if (e.getKeyEvent() != -1) 
 		 {
-			 if (gw.getGamePlayModeStatus() == true) // if game is currently running
-				 gw.addAsteroid();
+			 gw.addAsteroid();
 		 }
 	}
 }

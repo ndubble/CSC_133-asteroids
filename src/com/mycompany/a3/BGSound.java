@@ -17,6 +17,8 @@ import com.codename1.ui.Display;
  * Doan Nguyen
  * Fall 2018
  */
+
+// responsible for encapsulating background music/sound that is played during the game
 public class BGSound implements Runnable 
 {
 	private Media m;

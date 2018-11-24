@@ -49,10 +49,10 @@ public class GamemodeCommand extends Command
 			 gw.toggleGamePlayMode();
 			 if (gw.getGamePlayModeStatus() == true) // if just switched to "play" mode
 			 {
-				 gameModeSelectButton.setText("Pause");
-				 if (gw.getSound() == true)
-					 gw.toggleBackgroundSound();
-				 for(int i = 0; i < controlPanelButtons.size() && i < commands.size(); i++)
+				 gameModeSelectButton.setText("Pause"); // change gameModeSelect button text to "Pause"
+				 if (gw.getSound() == true)			// if sound is on
+					 gw.toggleBackgroundSound();  	// re-enable background sound
+				 for(int i = 0; i < controlPanelButtons.size() && i < commands.size(); i++) // enable all buttons except refuel
 				 {
 					 if (i == controlPanelButtons.size() - 1)
 					 {
@@ -66,17 +66,15 @@ public class GamemodeCommand extends Command
 					 }
 				 }
 				 
-				game.addKeyListener('a',commands.elementAt(0));				
-				game.addKeyListener('y',commands.elementAt(1));					
-				game.addKeyListener('b',commands.elementAt(2));												
-				game.addKeyListener(-91,commands.elementAt(3));						
-				game.addKeyListener(-92,commands.elementAt(4));						
-				game.addKeyListener(-93,commands.elementAt(5));							
-				game.addKeyListener(-94,commands.elementAt(6));					
-				game.addKeyListener(44,commands.elementAt(7));		
-				game.addKeyListener(46,commands.elementAt(8));						
-				game.addKeyListener(-90,commands.elementAt(9));			
-				game.addKeyListener('j',commands.elementAt(10));	
+				 // add keylisteners back
+				game.addKeyListener(-91,commands.elementAt(0));						
+				game.addKeyListener(-92,commands.elementAt(1));						
+				game.addKeyListener(-93,commands.elementAt(2));							
+				game.addKeyListener(-94,commands.elementAt(3));					
+				game.addKeyListener(44,commands.elementAt(4));		
+				game.addKeyListener(46,commands.elementAt(5));						
+				game.addKeyListener(-90,commands.elementAt(6));			
+				game.addKeyListener('j',commands.elementAt(7));	
 				
 				IIterator iterator = gw.getIterator();
 				while(iterator.hasNext()) // unselect any currently selected objects if there are any
@@ -89,13 +87,14 @@ public class GamemodeCommand extends Command
 					}
 				}
 				
+				//re-enable animation
 				timer.schedule(gw.getTimerRate(), true, game);
 			 }
-			 else
+			 else // if switched to pause mode
 			 {
-				gameModeSelectButton.setText("Play");
-				if (gw.getSound() == true)
-					gw.toggleBackgroundSound();
+				gameModeSelectButton.setText("Play"); // change gameModeSelect button text to "Play"
+				if (gw.getSound() == true)	// if sound is enabled
+					gw.toggleBackgroundSound();	// re-enable background sound
 				 
 				for(int i = 0; i < controlPanelButtons.size() && i < commands.size(); i++) // disable all gameplay commands/buttons
 				{
@@ -110,19 +109,18 @@ public class GamemodeCommand extends Command
 						 commands.elementAt(i).setEnabled(false);
 					 }
 				}
-
-				game.removeKeyListener('a',commands.elementAt(0));				
-				game.removeKeyListener('y',commands.elementAt(1));					
-				game.removeKeyListener('b',commands.elementAt(2));												
-				game.removeKeyListener(-91,commands.elementAt(3));						
-				game.removeKeyListener(-92,commands.elementAt(4));						
-				game.removeKeyListener(-93,commands.elementAt(5));							
-				game.removeKeyListener(-94,commands.elementAt(6));					
-				game.removeKeyListener(44,commands.elementAt(7));		
-				game.removeKeyListener(46,commands.elementAt(8));						
-				game.removeKeyListener(-90,commands.elementAt(9));				
-				game.removeKeyListener('j',commands.elementAt(10));
 				
+				// disable key listeners for gameplay related commands
+				game.removeKeyListener(-91,commands.elementAt(0));						
+				game.removeKeyListener(-92,commands.elementAt(1));						
+				game.removeKeyListener(-93,commands.elementAt(2));							
+				game.removeKeyListener(-94,commands.elementAt(3));					
+				game.removeKeyListener(44,commands.elementAt(4));		
+				game.removeKeyListener(46,commands.elementAt(5));						
+				game.removeKeyListener(-90,commands.elementAt(6));				
+				game.removeKeyListener('j',commands.elementAt(7));
+				
+				// stop animation
 				timer.cancel();
 			 }
 		

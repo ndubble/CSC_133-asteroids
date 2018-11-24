@@ -73,7 +73,7 @@ public class MapView extends Container implements Observer, ActionListener
 			{
 				((PlayerShip) x).getMissileLauncher().draw(g, pCmpRelPrnt);
 			}
-			else if (x instanceof NonPlayerShip)
+			else if (x instanceof NonPlayerShip) 
 			{
 				((NonPlayerShip) x).getMissileLauncher().draw(g, pCmpRelPrnt);
 			}
@@ -88,8 +88,7 @@ public class MapView extends Container implements Observer, ActionListener
 		
 		if (gw.getGamePlayModeStatus() == false) // if game is paused
 		{
-			// (1) check if any Asteroids or missiles have been selected
-			System.out.println("Clicked from west region --> x and y: " + x + " " + y);
+			// check if any Asteroids or missiles have been selected
 			IIterator iterator = gw.getIterator();
 			while(iterator.hasNext())
 			{
@@ -97,15 +96,13 @@ public class MapView extends Container implements Observer, ActionListener
 				if (obj instanceof ISelectable)
 				{
 					ISelectable selectableObj = (ISelectable) obj;
+					//if any are selected, mark that they have been selected
 					if(selectableObj.contains(pPtrRelPtr,pCmpRelPrnt))
 						selectableObj.setSelected(true);
-					else
+					else // unselect everything else
 						selectableObj.setSelected(false);	
 				}
 			}
-			//		(1.1) if any are selected, mark that they have been selected
-			// (2) if any were selected, draw them with extra stuff
-			// (3) redraw objects normally if they were unselected
 		}
 		
 		this.repaint();

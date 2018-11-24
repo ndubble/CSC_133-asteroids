@@ -17,6 +17,8 @@ import com.codename1.ui.Display;
  * Doan Nguyen
  * Fall 2018
  */
+
+// responsible for encapsulating sounds for events in the game world
 public class Sound 
 {
 	private Media m;

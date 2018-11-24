@@ -74,6 +74,7 @@ public class PlayerShip extends MoveableObject implements ISteerable
 	
 	public void draw(Graphics g, Point pCmpRelPrnt)
 	{
+		//draw a triangle
 		g.setColor(this.getColor());
 		g.drawLine(pCmpRelPrnt.getX() + (int)this.getLocation().getX() + top.getX(), 
 				pCmpRelPrnt.getY() + (int)this.getLocation().getY() + top.getY(), 

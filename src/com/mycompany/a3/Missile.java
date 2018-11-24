@@ -88,6 +88,7 @@ public class Missile extends MoveableObject implements ISelectable
 		yPoints[2] = pCmpRelPrnt.getY() + (int)this.getLocation().getY() + bottomRight.getY();
 		yPoints[3] = pCmpRelPrnt.getY() + (int)this.getLocation().getY() + topRight.getY();
 		
+		// draw a square
 		g.drawLine(xPoints[0], yPoints[0], xPoints[1], yPoints[1]);	
 		g.drawLine(xPoints[1], yPoints[1], xPoints[2], yPoints[2]);
 		g.drawLine(xPoints[2], yPoints[2], xPoints[3], yPoints[3]);

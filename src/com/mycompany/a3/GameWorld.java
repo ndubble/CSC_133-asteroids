@@ -67,6 +67,7 @@ public class GameWorld extends Observable implements IGameWorld
 		gameObjects = new GameObjectCollection();
 	}
 	
+	// resets the game world for when the player wants to play another game
 	public void resetWorld()
 	{
 		IIterator iterator = this.getIterator();
@@ -77,6 +78,7 @@ public class GameWorld extends Observable implements IGameWorld
 		this.init(gameWorldHeight, gameWorldWidth, timerRateMillisecs);
 	}
 	
+	// returns whether or not the player lost the game
 	public boolean getGameOverStatus()
 	{
 		return gameOver;
@@ -92,6 +94,7 @@ public class GameWorld extends Observable implements IGameWorld
 		return gameObjects.getIterator();
 	}
 	
+	// returns the currently active game mode (true = "play", false="pause")
 	public boolean getGamePlayModeStatus()
 	{
 		return gamePlayMode;
@@ -132,6 +135,7 @@ public class GameWorld extends Observable implements IGameWorld
 		}
 	}
 	
+	// enables/disables sound
 	public boolean setSound()
 	{
 		if (sound == true)
@@ -976,9 +980,9 @@ public class GameWorld extends Observable implements IGameWorld
 			if (iterator.elementAt(i) instanceof MoveableObject)
 			{
 				MoveableObject curObj = (MoveableObject) iterator.elementAt(i);
-				if (curObj.getKillStatus() == true)
+				if (curObj.getKillStatus() == true) // if object needs to be removed
 				{
-					if (curObj instanceof PlayerShip)
+					if (curObj instanceof PlayerShip) // if the game object is a PlayerShip
 					{
 						if (getSound() == true)
 							shipExplosionSound.play();
@@ -993,7 +997,7 @@ public class GameWorld extends Observable implements IGameWorld
 						else
 							this.addPS();
 					}
-					else if (curObj instanceof NonPlayerShip)
+					else if (curObj instanceof NonPlayerShip) // if game object is a NonPlayerShip
 					{
 						NonPlayerShip nps = (NonPlayerShip) curObj;
 						if (nps.getDestroyedByPS() == true)
@@ -1002,7 +1006,7 @@ public class GameWorld extends Observable implements IGameWorld
 							shipExplosionSound.play();
 						gameObjects.remove(i);
 					}
-					else if (curObj instanceof Asteroid)
+					else if (curObj instanceof Asteroid) // if game object is a Asteroid
 					{
 						Asteroid ast = (Asteroid) curObj;
 						if (ast.getDestroyedByPS() == true)
@@ -1018,8 +1022,8 @@ public class GameWorld extends Observable implements IGameWorld
 						}
 						gameObjects.remove(i);
 					}
-					else
-						gameObjects.remove(i);
+					else // for any other game objects
+						gameObjects.remove(i); // just remove it
 				}
 			}
 		}
@@ -1032,15 +1036,17 @@ public class GameWorld extends Observable implements IGameWorld
 	public void refuel()
 	{
 		IIterator iterator = getIterator();
-		while(iterator.hasNext())
+		while(iterator.hasNext()) // find game objects that are selectable
 		{
 			Object obj = iterator.getNext();
 			if (obj instanceof ISelectable)
 			{
 				ISelectable selectableObj = (ISelectable) obj;
-				if(selectableObj instanceof Missile && selectableObj.isSelected() == true)
+				// check if this ISelectable object is a missile and if it's currently selected
+				if(selectableObj instanceof Missile && selectableObj.isSelected() == true) 
 				{
 					Missile missileObj = (Missile) selectableObj;
+					// give the missile max fuel
 					missileObj.setFuelLevel(missileObj.getInitialFuel());
 				}
 			}

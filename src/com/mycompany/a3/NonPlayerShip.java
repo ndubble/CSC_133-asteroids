@@ -103,6 +103,8 @@ public class NonPlayerShip extends MoveableObject
 	@Override
 	public void draw(Graphics g, Point pCmpRelPrnt) 
 	{
+		
+		// draw a triangle
 		g.setColor(this.getColor());
 		int xPoints[] = new int[3];
 		xPoints[0] = pCmpRelPrnt.getX() + (int)this.getLocation().getX() + top.getX();

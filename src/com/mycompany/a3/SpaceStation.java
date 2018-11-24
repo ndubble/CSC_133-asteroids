@@ -22,7 +22,7 @@ public class SpaceStation extends FixableObject
 	public SpaceStation(int gameWorldHeight, int gameWorldWidth) 
 	{
 		super(gameWorldHeight, gameWorldWidth);
-		blinkRate = R.nextInt(BLINKRATEMAX + 1);
+		blinkRate = R.nextInt(BLINKRATEMAX) + 1;
 		this.setLightOn(false);
 		this.setSize(RADIUS*2);
 		this.setColor(ColorUtil.CYAN);
@@ -59,6 +59,7 @@ public class SpaceStation extends FixableObject
 	@Override
 	public void draw(Graphics g, Point pCmpRelPrnt) 
 	{
+		// draw a circle
 		g.setColor(this.getColor());
 		int x,y;
 		x = pCmpRelPrnt.getX() + (int) this.getLocation().getX();

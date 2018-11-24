@@ -18,9 +18,9 @@ public class Asteroid extends MoveableObject implements ISelectable
 	private final int SIZEMIN = 55;
 	private final int SIZEMAX = 80;
 	private Point topLeft, topRight, bottomLeft, bottomRight;
-	private boolean destroyedByPS;
-	private boolean destroyedByNPS;
-	private boolean isSelectedStatus;
+	private boolean destroyedByPS; // flag that is set if this instance of Asteroid is destroyed by a PlayerShip
+	private boolean destroyedByNPS; // flag that is set if this instance of Asteroid is destroyed by a NonPlayerShip
+	private boolean isSelectedStatus; // flag that is set if this instance of Asteroid is currently selected during pause mode
 	
 	public Asteroid(int gameWorldHeight, int gameWorldWidth) 
 	{
@@ -80,6 +80,8 @@ public class Asteroid extends MoveableObject implements ISelectable
 			g.setColor(ColorUtil.YELLOW);
 		else
 			g.setColor(this.getColor());
+		
+		// draw a square
 		int xPoints[] = new int[4];
 		xPoints[0] = pCmpRelPrnt.getX() + (int)this.getLocation().getX() + topLeft.getX();
 		xPoints[1] = pCmpRelPrnt.getX() + (int)this.getLocation().getX() + bottomLeft.getX();

@@ -37,8 +37,8 @@ public class Game extends Form implements Runnable
 	private PointsView pv;
 	private int refreshRate = 10;
 	UITimer timer;
-	private Vector<ControlPanelButton> controlPanelButtons;
-	private Vector<Command> commands;
+	private Vector<ControlPanelButton> controlPanelButtons; // passed to GamemodeCommand instance so it can disable buttons as needed
+	private Vector<Command> commands; // passed to GameModeCommand instance so it can disable commands as needed
 	
 	public Game()
 	{
@@ -132,12 +132,12 @@ public class Game extends Form implements Runnable
 		ControlPanelButton firePSMissile = new ControlPanelButton("Fire Player Ship Missile");
 		ControlPanelButton jump = new ControlPanelButton("Jump Through Hyperspace");
 		ControlPanelButton refuel = new ControlPanelButton("Refuel");
-		ControlPanelButton gamemodeSelect = new ControlPanelButton("Pause");
+		ControlPanelButton gamemodeSelect = new ControlPanelButton("Pause"); // is passed to GamemodeCommand instance so it...
+																			 // ... can change button text depending on what gamemode...
+																			 // ... is active
 		ControlPanelButton quit = new ControlPanelButton("Quit");
 		
-		controlPanelButtons.add(addAsteroid);
-		controlPanelButtons.add(addNPS);
-		controlPanelButtons.add(addStation);
+		// add buttons to the vector that will be passed to GamemodeCommand instance
 		controlPanelButtons.add(increaseSpeed);
 		controlPanelButtons.add(decreaseSpeed);
 		controlPanelButtons.add(turnLeft);
@@ -188,9 +188,7 @@ public class Game extends Form implements Runnable
 		QuitCommand myQuit= new QuitCommand();
 		quit.setCommand(myQuit);
 		
-		commands.add(myAddAsteroid);
-		commands.add(myAddNPS);
-		commands.add(myAddStation);
+		// add commands to vector that will be passed to GamemodeCommand instance
 		commands.add(myIncreaseSpeed);
 		commands.add(myDecreaseSpeed);
 		commands.add(myTurnLeft);
@@ -275,6 +273,7 @@ public class Game extends Form implements Runnable
 		return commands;
 	}
 	
+	// generate random integer between min and max inclusive
 	public static int genRandInt(int min, int max)
 	{
 		Random r = new Random();
@@ -287,8 +286,8 @@ public class Game extends Form implements Runnable
 	{
 		if (!gw.getGameOverStatus())
 		{
-			int roll = this.genRandInt(1, 900);
-			if (roll>=1 && roll<=3)
+			int roll = this.genRandInt(1, 900); 
+			if (roll>=1 && roll<=3) // generate NonPlayerShips throughout the game
 				gw.addNPS();
 			gw.tick();
 		}
